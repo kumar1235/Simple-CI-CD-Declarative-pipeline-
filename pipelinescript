@@ -1,0 +1,31 @@
+pipeline{
+    agent any 
+    environment{
+        PATH= "/opt/maven/bin:$PATH"
+    }
+    stages{
+        stage("Git Checkout"){
+            steps{
+                git 'https://github.com/kumar1235/SaiJavaCode.git'
+            }
+        }
+        stage("Build"){
+            steps{
+                sh "mvn clean package"
+            }
+        }
+        stage("Deploy"){
+            steps{
+            sshagent(['tomcat-new']) {
+            sh """ 
+                scp -o StrictHostKeyChecking=no webapp/target/webapp.war ec2-user@172.31.32.77:/opt/tomcat8/webapps/
+                ssh ec2-user@172.31.32.77 /opt/tomcat8/bin/shutdown.sh
+                ssh ec2-user@172.31.32.77 /opt/tomcat8/bin/startup.sh
+                
+            
+            """
+            }
+            }
+        }
+    }
+}
